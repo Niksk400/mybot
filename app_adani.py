@@ -12,9 +12,11 @@ from langchain.llms import OpenAI
 openai.api_type = "azure"
 openai.api_base = "https://foradanitrying.openai.azure.com/"
 openai.api_version = "2023-05-15"
-openai.api_key = "BvPeJORkKTSU2qr6Rbk36SW008iZlI5T9Bpm4K65qCtzluNmFTWxJQQJ99BGACHYHv6XJ3w3AAABACOG4rwB"
+openai.api_key = "F7q7I1inhLYOnzmLhk04tSIufeUlzZHB7spO7s4oWTREILlxrDqNJQQJ99BGACHYHv6XJ3w3AAABACOGyKuF"
 
-DEPLOYMENT_NAME = "gpt-35-turbo (version:0125)"
+# Deployment Names
+DEPLOYMENT_NAME_CHATBOT = "gpt-35-turbo (version:0125)"
+DEPLOYMENT_NAME_EMBEDDINGS = "text-embedding-ada-002"
 
 st.set_page_config(page_title="📄 Azure PDF Chatbot", page_icon="🤖")
 
@@ -37,9 +39,9 @@ if pdf_file:
     splitter = CharacterTextSplitter(separator="\n", chunk_size=1000, chunk_overlap=200)
     chunks = splitter.split_text(text)
 
-    # Vector Store with proper Azure settings
+    # Vector Store with proper Azure Embedding settings
     embeddings = OpenAIEmbeddings(
-        deployment=DEPLOYMENT_NAME,
+        deployment=DEPLOYMENT_NAME_EMBEDDINGS,
         openai_api_key=openai.api_key,
         openai_api_base=openai.api_base,
         openai_api_type="azure",
@@ -48,9 +50,10 @@ if pdf_file:
 
     vectorstore = FAISS.from_texts(chunks, embeddings)
 
+    # Chatbot LLM with Azure GPT-3.5
     chain = load_qa_chain(
         OpenAI(
-            deployment_name=DEPLOYMENT_NAME,
+            deployment_name=DEPLOYMENT_NAME_CHATBOT,
             openai_api_key=openai.api_key,
             openai_api_base=openai.api_base,
             openai_api_type="azure",
@@ -74,6 +77,7 @@ if pdf_file:
             message(chat["content"], is_user=True)
         else:
             message(chat["content"])
+
 
 
 
