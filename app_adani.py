@@ -1,3 +1,4 @@
+
 import streamlit as st
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.vectorstores import FAISS
@@ -5,12 +6,17 @@ from langchain.chains import RetrievalQA
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_huggingface import HuggingFacePipeline
-from transformers import pipeline
+from transformers import pipeline, AutoModelForSeq2SeqLM, AutoTokenizer
 import tempfile
 
-embeddings = HuggingFaceEmbeddings(model_name='sentence-transformers/all-MiniLM-L6-v2')
-llm_pipeline = pipeline("text2text-generation", model="google/flan-t5-small", max_new_tokens=200)
+# Safe model loading to avoid meta tensor issue
+model_name = "google/flan-t5-small"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+llm_pipeline = pipeline("text2text-generation", model=model, tokenizer=tokenizer, max_new_tokens=200)
 llm = HuggingFacePipeline(pipeline=llm_pipeline)
+
+embeddings = HuggingFaceEmbeddings(model_name='sentence-transformers/all-MiniLM-L6-v2')
 
 st.set_page_config(page_title="Adani PDF Chatbot", page_icon="⚡", layout="centered")
 
@@ -85,3 +91,4 @@ if pdf_file:
         for q, a in reversed(st.session_state.history):
             st.markdown(f"<div class='chat-bubble user-bubble'><b>You:</b> {q}</div>", unsafe_allow_html=True)
             st.markdown(f"<div class='chat-bubble'><b>Bot:</b> {a}</div>", unsafe_allow_html=True)
+
