@@ -1,4 +1,3 @@
-
 import streamlit as st
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.vectorstores import FAISS
@@ -9,7 +8,6 @@ from langchain_huggingface import HuggingFacePipeline
 from transformers import pipeline, AutoModelForSeq2SeqLM, AutoTokenizer
 import tempfile
 
-# Safe model loading to avoid meta tensor issue
 model_name = "google/flan-t5-small"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
@@ -64,31 +62,39 @@ if pdf_file:
         loader = PyPDFLoader(tmp_path)
         documents = loader.load()
 
-        text_splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=50)
-        docs = text_splitter.split_documents(documents)
+        if documents:
+            text_splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+            docs = text_splitter.split_documents(documents)
 
-        vector_store = FAISS.from_documents(docs, embeddings)
-        retriever = vector_store.as_retriever(search_kwargs={"k": 3})
+            if docs:
+                vector_store = FAISS.from_documents(docs, embeddings)
+                retriever = vector_store.as_retriever(search_kwargs={"k": 3})
+                qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever)
 
-        qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever, return_source_documents=False)
+                st.success("PDF loaded! Start chatting below:")
 
-        st.success("PDF loaded! Start chatting below:")
+                if "history" not in st.session_state:
+                    st.session_state.history = []
 
-        if "history" not in st.session_state:
-            st.session_state.history = []
+                query = st.text_input("Ask your question:", key="input", placeholder="Type your question here...")
 
-        query = st.text_input("Ask your question:", key="input", placeholder="Type your question here...")
+                if query and len(query.strip()) > 5:
+                    with st.spinner("Thinking..."):
+                        answer = qa_chain.run(query)
+                        st.session_state.history.append((query, answer))
+                elif query:
+                    st.warning("Enter a valid question (min 5 characters).")
 
-        if query and len(query.strip()) > 5:
-            with st.spinner("Thinking..."):
-                answer = qa_chain.run(query)
-                st.session_state.history.append((query, answer))
-        elif query:
-            st.warning("Enter a valid question (min 5 characters).")
+                st.divider()
 
-        st.divider()
+                for q, a in reversed(st.session_state.history):
+                    st.markdown(f"<div class='chat-bubble user-bubble'><b>You:</b> {q}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='chat-bubble'><b>Bot:</b> {a}</div>", unsafe_allow_html=True)
+            else:
+                st.error("Could not extract valid content from the PDF.")
+        else:
+            st.error("PDF appears empty or invalid.")
+else:
+    st.info("Please upload a PDF to begin.")
 
-        for q, a in reversed(st.session_state.history):
-            st.markdown(f"<div class='chat-bubble user-bubble'><b>You:</b> {q}</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='chat-bubble'><b>Bot:</b> {a}</div>", unsafe_allow_html=True)
 
