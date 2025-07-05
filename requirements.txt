@@ -7,4 +7,5 @@ transformers
 sentence-transformers
 torch
 huggingface-hub
+pypdf
 
