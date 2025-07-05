@@ -1,100 +1,70 @@
 import streamlit as st
+from streamlit_chat import message
+import PyPDF2
+import openai
 from langchain.text_splitter import CharacterTextSplitter
-from langchain_community.vectorstores import FAISS
-from langchain.chains import RetrievalQA
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_huggingface import HuggingFacePipeline
-from transformers import pipeline, AutoModelForSeq2SeqLM, AutoTokenizer
-import tempfile
+from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.vectorstores import FAISS
+from langchain.chains.question_answering import load_qa_chain
+from langchain.llms import OpenAI
 
-model_name = "google/flan-t5-small"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
-llm_pipeline = pipeline("text2text-generation", model=model, tokenizer=tokenizer, max_new_tokens=200)
-llm = HuggingFacePipeline(pipeline=llm_pipeline)
+# Azure OpenAI Setup
+openai.api_type = "azure"
+openai.api_base = "https://botpractice.openai.azure.com/"
+openai.api_version = "2023-05-15"
+openai.api_key = "2AOaWSX5pAyavK4nBw7cWzksKu3FTznte3RpTaGwUxy0H1bVjYuzJQQJ99BFAC77bzfXJ3w3AAABACOGCgwx"
 
-embeddings = HuggingFaceEmbeddings(model_name='sentence-transformers/all-MiniLM-L6-v2')
+# Your Azure OpenAI Deployment Name
+DEPLOYMENT_NAME = "botpractice"
 
-st.set_page_config(page_title="Adani PDF Chatbot", page_icon="⚡", layout="centered")
+st.set_page_config(page_title="📄 PDF Chatbot (Azure)", page_icon="🤖")
 
-st.markdown("""
-<style>
-body {
-    background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Adani_Power_logo.svg/512px-Adani_Power_logo.svg.png');
-    background-size: contain;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-}
-.stApp {
-    background: rgba(255, 255, 255, 0.9);
-    max-width: 800px;
-    margin: auto;
-    padding: 20px;
-    border-radius: 15px;
-}
-.chat-bubble {
-    background: linear-gradient(135deg, #e1f5fe, #b3e5fc);
-    padding: 12px;
-    border-radius: 15px;
-    margin: 10px 0;
-    font-size: 16px;
-}
-.user-bubble {
-    background: #c8e6c9;
-}
-</style>
-""", unsafe_allow_html=True)
+st.title("🤖 Azure PDF Chatbot")
 
-st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Adani_Group_Logo.svg/512px-Adani_Group_Logo.svg.png", width=200)
-st.title("💬 Adani PDF Chatbot")
-st.write("Ask questions from your PDF, powered by Adani Group.")
+# Initialize session state
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
-pdf_file = st.file_uploader("Upload PDF 📄", type=["pdf"])
+# Upload PDF
+pdf_file = st.file_uploader("Upload your PDF", type="pdf")
 
+# Process PDF
 if pdf_file:
-    with st.spinner("Processing PDF..."):
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
-            tmp_file.write(pdf_file.read())
-            tmp_path = tmp_file.name
+    pdf_reader = PyPDF2.PdfReader(pdf_file)
+    text = ""
+    for page in pdf_reader.pages:
+        text += page.extract_text()
 
-        loader = PyPDFLoader(tmp_path)
-        documents = loader.load()
+    st.success("PDF Loaded Successfully!")
 
-        if documents:
-            text_splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=50)
-            docs = text_splitter.split_documents(documents)
+    # Split text into chunks
+    splitter = CharacterTextSplitter(separator="\n", chunk_size=1000, chunk_overlap=200)
+    chunks = splitter.split_text(text)
 
-            if docs:
-                vector_store = FAISS.from_documents(docs, embeddings)
-                retriever = vector_store.as_retriever(search_kwargs={"k": 3})
-                qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever)
+    # Vector Store
+    embeddings = OpenAIEmbeddings(deployment=DEPLOYMENT_NAME)
+    vectorstore = FAISS.from_texts(chunks, embeddings)
 
-                st.success("PDF loaded! Start chatting below:")
+    chain = load_qa_chain(OpenAI(deployment_name=DEPLOYMENT_NAME), chain_type="stuff")
 
-                if "history" not in st.session_state:
-                    st.session_state.history = []
+    # Chat input
+    user_input = st.text_input("Ask a question based on the PDF:")
 
-                query = st.text_input("Ask your question:", key="input", placeholder="Type your question here...")
+    if user_input:
+        st.session_state.chat_history.append({"role": "user", "content": user_input})
 
-                if query and len(query.strip()) > 5:
-                    with st.spinner("Thinking..."):
-                        answer = qa_chain.run(query)
-                        st.session_state.history.append((query, answer))
-                elif query:
-                    st.warning("Enter a valid question (min 5 characters).")
+        docs = vectorstore.similarity_search(user_input)
+        response = chain.run(input_documents=docs, question=user_input)
 
-                st.divider()
+        st.session_state.chat_history.append({"role": "bot", "content": response})
 
-                for q, a in reversed(st.session_state.history):
-                    st.markdown(f"<div class='chat-bubble user-bubble'><b>You:</b> {q}</div>", unsafe_allow_html=True)
-                    st.markdown(f"<div class='chat-bubble'><b>Bot:</b> {a}</div>", unsafe_allow_html=True)
-            else:
-                st.error("Could not extract valid content from the PDF.")
+    # Display chat
+    for chat in st.session_state.chat_history:
+        if chat["role"] == "user":
+            message(chat["content"], is_user=True)
         else:
-            st.error("PDF appears empty or invalid.")
-else:
-    st.info("Please upload a PDF to begin.")
+            message(chat["content"])
+
+
 
 
