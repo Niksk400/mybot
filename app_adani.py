@@ -10,11 +10,11 @@ from langchain.llms import OpenAI
 
 # Azure OpenAI Setup
 openai.api_type = "azure"
-openai.api_base = "https://adani.openai.azure.com/"
+openai.api_base = "https://foradanitrying.openai.azure.com/"
 openai.api_version = "2023-05-15"
-openai.api_key = "3zCsaAzimIlZJwWSQrZ3s38rQloyaEbq2uYcJgCqtwGQbKrN8Ci8JQQJ99BGACHrzpqXJ3w3AAABACOGF0AK"
+openai.api_key = "BvPeJORkKTSU2qr6Rbk36SW008iZlI5T9Bpm4K65qCtzluNmFTWxJQQJ99BGACHYHv6XJ3w3AAABACOG4rwB"
 
-DEPLOYMENT_NAME = "4c7301ac-6568-4c88-bf64-7fbddd4d6a6a"
+DEPLOYMENT_NAME = "gpt-35-turbo (version:0125)"
 
 st.set_page_config(page_title="📄 Azure PDF Chatbot", page_icon="🤖")
 
