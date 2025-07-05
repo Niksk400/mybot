@@ -1,11 +1,12 @@
 streamlit
 streamlit-chat
+PyPDF2
 openai
 langchain
 langchain-community
-pypdf2
 faiss-cpu
 tiktoken
+
 
 
 
