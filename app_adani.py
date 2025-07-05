@@ -15,8 +15,8 @@ openai.api_version = "2023-05-15"
 openai.api_key = "F7q7I1inhLYOnzmLhk04tSIufeUlzZHB7spO7s4oWTREILlxrDqNJQQJ99BGACHYHv6XJ3w3AAABACOGyKuF"
 
 # Deployment Names
-DEPLOYMENT_NAME_CHATBOT = "gpt-35-turbo (version:0125)"
-DEPLOYMENT_NAME_EMBEDDINGS = "text-embedding-ada-002"
+DEPLOYMENT_NAME_CHATBOT = "chatbot-gpt35"
+DEPLOYMENT_NAME_EMBEDDINGS = "embedding-ada"
 
 st.set_page_config(page_title="📄 Azure PDF Chatbot", page_icon="🤖")
 
