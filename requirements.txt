@@ -8,5 +8,5 @@ sentence-transformers
 torch
 huggingface-hub
 pypdf
-pip install faiss-cpu
+faiss-cpu
 
