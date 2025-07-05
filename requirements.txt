@@ -1,12 +1,8 @@
 streamlit
+streamlit-chat
+openai
 langchain
-langchain-community
-langchain-core
-langchain-huggingface
-transformers
-sentence-transformers
-torch
-huggingface-hub
-pypdf
+pypdf2
 faiss-cpu
+
 
