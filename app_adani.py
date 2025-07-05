@@ -11,7 +11,7 @@ from langchain.llms import OpenAI
 # Azure OpenAI Setup
 openai.api_type = "azure"
 openai.api_base = "https://foradanitrying.openai.azure.com/"
-openai.api_version = "2023-05-15"
+openai.api_version = "2023-12-01-preview"
 openai.api_key = "2KfAJHSB64E2t2h2x4uGD4T7dEoEbbctuKN2pl7jWRpfyNI4YzueJQQJ99BGACHYHv6XJ3w3AAABACOGY084"
 
 # Deployment Names
