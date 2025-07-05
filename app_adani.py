@@ -3,8 +3,8 @@ from streamlit_chat import message
 import PyPDF2
 import openai
 from langchain.text_splitter import CharacterTextSplitter
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.vectorstores import FAISS
+from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_community.vectorstores import FAISS
 from langchain.chains.question_answering import load_qa_chain
 from langchain.llms import OpenAI
 
@@ -12,7 +12,7 @@ from langchain.llms import OpenAI
 openai.api_type = "azure"
 openai.api_base = "https://adani.openai.azure.com/"
 openai.api_version = "2023-05-15"
-openai.api_key = "F9Y15O5HxYkLKddLbj0Q4Y2N6ZgFM21TKv82BQPP5ktP8Bl8FATxJQQJ99BGACHrzpqXJ3w3AAABACOGknUY"
+openai.api_key = "3zCsaAzimIlZJwWSQrZ3s38rQloyaEbq2uYcJgCqtwGQbKrN8Ci8JQQJ99BGACHrzpqXJ3w3AAABACOGF0AK"
 
 DEPLOYMENT_NAME = "Microsoft.CognitiveServicesOpenAI-20250705144131"
 
@@ -74,7 +74,6 @@ if pdf_file:
             message(chat["content"], is_user=True)
         else:
             message(chat["content"])
-
 
 
 
