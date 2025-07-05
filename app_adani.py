@@ -14,7 +14,7 @@ openai.api_base = "https://botpractice.openai.azure.com/"
 openai.api_version = "2023-05-15"
 openai.api_key = "4r7Fx7D3yCecqmwlpwkUNE0aMxq2QFU4kjbYTxoeX0QfoqFc36Y1JQQJ99BFAC77bzfXJ3w3AAABACOG7POf"
 
-DEPLOYMENT_NAME = "mygen1"
+DEPLOYMENT_NAME = "Azure OpenAI"
 
 st.set_page_config(page_title="📄 Azure PDF Chatbot", page_icon="🤖")
 
