@@ -14,7 +14,7 @@ openai.api_base = "https://adani.openai.azure.com/"
 openai.api_version = "2023-05-15"
 openai.api_key = "3zCsaAzimIlZJwWSQrZ3s38rQloyaEbq2uYcJgCqtwGQbKrN8Ci8JQQJ99BGACHrzpqXJ3w3AAABACOGF0AK"
 
-DEPLOYMENT_NAME = "Microsoft.CognitiveServicesOpenAI-20250705144131"
+DEPLOYMENT_NAME = "4c7301ac-6568-4c88-bf64-7fbddd4d6a6a"
 
 st.set_page_config(page_title="📄 Azure PDF Chatbot", page_icon="🤖")
 
