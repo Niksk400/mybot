@@ -1,71 +1,62 @@
 import streamlit as st
 from streamlit_chat import message
 import PyPDF2
-import openai
 from langchain.text_splitter import CharacterTextSplitter
-from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_openai import AzureOpenAIEmbeddings, AzureChatOpenAI
 from langchain_community.vectorstores import FAISS
 from langchain.chains.question_answering import load_qa_chain
-from langchain.llms import OpenAI
 
-# Azure OpenAI Setup
-openai.api_type = "azure"
-openai.api_base = "https://foradanitrying.openai.azure.com/"
-openai.api_version = "2023-12-01-preview"
-openai.api_key = "2KfAJHSB64E2t2h2x4uGD4T7dEoEbbctuKN2pl7jWRpfyNI4YzueJQQJ99BGACHYHv6XJ3w3AAABACOGY084"
+# ----------------- Azure OpenAI Setup -----------------
+AZURE_OPENAI_API_KEY = "2KfAJHSB64E2t2h2x4uGD4T7dEoEbbctuKN2pl7jWRpfyNI4YzueJQQJ99BGACHYHv6XJ3w3AAABACOGY084"  # Replace with your valid key
+AZURE_OPENAI_ENDPOINT = "https://foradanitrying.openai.azure.com/"  # Replace with your correct endpoint
+AZURE_OPENAI_API_VERSION = "2023-12-01-preview"
 
-# Deployment Names
-DEPLOYMENT_NAME_CHATBOT = "chatbot-gpt35"
-DEPLOYMENT_NAME_EMBEDDINGS = "embedding-ada"
+DEPLOYMENT_NAME_CHATBOT = "chatbot-gpt35"      # Must match your Azure GPT-3.5 deployment name
+DEPLOYMENT_NAME_EMBEDDINGS = "embedding-ada"   # Must match your Azure embedding deployment name
 
-# Model Names (Match Azure portal exactly)
-MODEL_CHATBOT = "gpt-35-turbo"
-MODEL_EMBEDDINGS = "text-embedding-ada-002"
-
-st.set_page_config(page_title="📄 Azure PDF Chatbot", page_icon="🤖")
-st.title("🤖 Azure PDF Chatbot")
+# ----------------- Streamlit UI Setup -----------------
+st.set_page_config(page_title="Azure PDF Chatbot")
+st.title("Azure PDF Chatbot")
 
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
+# ----------------- File Upload -----------------
 pdf_file = st.file_uploader("Upload your PDF", type="pdf")
 
 if pdf_file:
-    pdf_reader = PyPDF2.PdfReader(pdf_file)
     text = ""
+    pdf_reader = PyPDF2.PdfReader(pdf_file)
     for page in pdf_reader.pages:
-        text += page.extract_text() or ""
+        text += page.extract_text()
 
-    st.success("✅ PDF Loaded Successfully")
+    st.success("PDF Loaded Successfully")
 
-    # Split text into chunks
+    # ----------------- Text Chunking -----------------
     splitter = CharacterTextSplitter(separator="\n", chunk_size=1000, chunk_overlap=200)
     chunks = splitter.split_text(text)
 
-    # Vector Store with Azure Embeddings (Include model name!)
-    embeddings = OpenAIEmbeddings(
-        deployment=DEPLOYMENT_NAME_EMBEDDINGS,
-        model=MODEL_EMBEDDINGS,
-        openai_api_base=openai.api_base,
-        openai_api_key=openai.api_key,
-        openai_api_type=openai.api_type,
-        openai_api_version=openai.api_version,
+    # ----------------- Azure OpenAI Embeddings -----------------
+    embeddings = AzureOpenAIEmbeddings(
+        azure_deployment=DEPLOYMENT_NAME_EMBEDDINGS,
+        azure_endpoint=AZURE_OPENAI_ENDPOINT,
+        openai_api_key=AZURE_OPENAI_API_KEY,
+        openai_api_version=AZURE_OPENAI_API_VERSION,
     )
 
     vectorstore = FAISS.from_texts(chunks, embeddings)
 
-    # Azure GPT-3.5 Chatbot with model specified
-    llm = OpenAI(
+    # ----------------- Azure ChatGPT Setup -----------------
+    llm = AzureChatOpenAI(
         deployment_name=DEPLOYMENT_NAME_CHATBOT,
-        model=MODEL_CHATBOT,
-        openai_api_base=openai.api_base,
-        openai_api_key=openai.api_key,
-        openai_api_type=openai.api_type,
-        openai_api_version=openai.api_version,
+        azure_endpoint=AZURE_OPENAI_ENDPOINT,
+        openai_api_key=AZURE_OPENAI_API_KEY,
+        openai_api_version=AZURE_OPENAI_API_VERSION,
     )
 
     chain = load_qa_chain(llm, chain_type="stuff")
 
+    # ----------------- Chat Interface -----------------
     user_input = st.text_input("Ask a question based on the PDF:")
 
     if user_input:
@@ -78,7 +69,3 @@ if pdf_file:
 
     for chat in st.session_state.chat_history:
         message(chat["content"], is_user=(chat["role"] == "user"))
-
-    
-   
-    
