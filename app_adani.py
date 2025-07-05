@@ -10,11 +10,11 @@ from langchain.llms import OpenAI
 
 # Azure OpenAI Setup
 openai.api_type = "azure"
-openai.api_base = "https://adani.openai.azure.com/"  # Correct endpoint
+openai.api_base = "https://foradanitrying.openai.azure.com/"
 openai.api_version = "2023-05-15"
-openai.api_key = "BvPeJORkKTSU2qr6Rbk36SW008iZlI5T9Bpm4K65qCtzluNmFTWxJQQJ99BGACHYHv6XJ3w3AAABACOG4rwB"  # Replace with your actual Azure API key
+openai.api_key = "BvPeJORkKTSU2qr6Rbk36SW008iZlI5T9Bpm4K65qCtzluNmFTWxJQQJ99BGACHYHv6XJ3w3AAABACOG4rwB"  # Replace with your real API Key
 
-# Deployment Names (as per your Azure portal)
+# Deployment Names (as per Azure portal)
 DEPLOYMENT_NAME_CHATBOT = "chatbot-gpt35"
 DEPLOYMENT_NAME_EMBEDDINGS = "embedding-ada"
 
@@ -38,27 +38,29 @@ if pdf_file:
     splitter = CharacterTextSplitter(separator="\n", chunk_size=1000, chunk_overlap=200)
     chunks = splitter.split_text(text)
 
-    # Embedding Setup
+    # Embedding Setup (Corrected with model specified)
     embeddings = OpenAIEmbeddings(
         deployment=DEPLOYMENT_NAME_EMBEDDINGS,
-        openai_api_key=openai.api_key,
+        model="text-embedding-ada-002",  # Important for Azure
         openai_api_base=openai.api_base,
         openai_api_type=openai.api_type,
-        openai_api_version=openai.api_version,
+        openai_api_key=openai.api_key,
+        openai_api_version=openai.api_version
     )
 
     vectorstore = FAISS.from_texts(chunks, embeddings)
 
-    # GPT Chatbot Setup
+    # GPT-3.5 Chatbot Setup (with model_name)
     chain = load_qa_chain(
         OpenAI(
             deployment_name=DEPLOYMENT_NAME_CHATBOT,
-            openai_api_key=openai.api_key,
+            model_name="gpt-35-turbo",
             openai_api_base=openai.api_base,
             openai_api_type=openai.api_type,
-            openai_api_version=openai.api_version,
+            openai_api_key=openai.api_key,
+            openai_api_version=openai.api_version
         ),
-        chain_type="stuff",
+        chain_type="stuff"
     )
 
     user_input = st.text_input("Ask a question based on the PDF:")
@@ -76,5 +78,3 @@ if pdf_file:
             message(chat["content"], is_user=True)
         else:
             message(chat["content"])
-
-
